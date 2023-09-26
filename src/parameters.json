@@ -1,0 +1,10 @@
+{
+  "AzureOpenAiEndpoint": {
+    "type": "String",
+    "value": "<<YOURVALUEHERE>>"
+  },
+  "AOAIAPIKey": {
+    "type": "String",
+    "value": "<<YOURVALUEHERE>>"
+  }
+}

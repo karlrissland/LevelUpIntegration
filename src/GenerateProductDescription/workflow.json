@@ -20,10 +20,13 @@
             "Call_Davinci_Text_Completion": {
                 "type": "Http",
                 "inputs": {
-                    "uri": "@parameters('AzureOpenAiEndpoint')",
+                    "uri": "@{parameters('AzureAiBaseEndpoint')}@{parameters('DavinciEndpoint')}",
                     "method": "POST",
                     "headers": {
                         "api-key": "@{parameters('AOAIAPIKey')}"
+                    },
+                    "queries": {
+                        "api-version": "@{parameters('AzureAPIVersion')}"
                     },
                     "body": {
                         "prompt": "You are generating descriptions for products to be sold online.  Create a consice product description for: @{body('Parse_Input_JSON')?['productDescription']}",
@@ -274,10 +277,35 @@
             }
         },
         "parameters": {
-            "AzureOpenAiEndpoint": {
+            "AzureAiBaseEndpoint": {
                 "type": "String",
-                "value": "https://aoai-scott.openai.azure.com/openai/deployments/scott-davinci/completions?api-version=2023-07-01-preview",
-                "defaultValue": "https://aoai-scott.openai.azure.com/openai/deployments/scott-davinci/completions?api-version=2023-07-01-preview"
+                "value": "https://aoai-scott.openai.azure.com/openai/",
+                "defaultValue": "https://aoai-scott.openai.azure.com/openai/"
+            },
+            "DavinciEndpoint": {
+                "type": "String",
+                "value": "deployments/scott-davinci/completions",
+                "defaultValue": "deployments/scott-davinci/completions"
+            },
+            "AOAIAPIKey": {
+                "type": "String",
+                "value": "[KEY]",
+                "defaultValue": "[KEY]"
+            },
+            "AzureDALLEEndpoint": {
+                "type": "String",
+                "value": "images/generations:submit",
+                "defaultValue": "images/generations:submit"
+            },
+            "AzureDALLERetrievalEndpoint": {
+                "type": "String",
+                "value": "operations/images/",
+                "defaultValue": "operations/images/"
+            },
+            "AzureAPIVersion": {
+                "type": "String",
+                "value": "2023-06-01-preview",
+                "defaultValue": "2023-06-01-preview"
             }
         }
     },

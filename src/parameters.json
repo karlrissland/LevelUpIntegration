@@ -1,10 +1,26 @@
 {
-  "AzureOpenAiEndpoint": {
+  "AzureAiBaseEndpoint": {
     "type": "String",
-    "value": "<<YOURVALUEHERE>>"
+    "value": "[AOAIENDPOINT]"
+  },
+  "DavinciEndpoint": {
+    "type": "String",
+    "value": "[DAVINCI_DEPLOYMENT]"
   },
   "AOAIAPIKey": {
     "type": "String",
-    "value": "<<YOURVALUEHERE>>"
+    "value": "[APIKEY]"
+  },
+  "AzureDALLEEndpoint": {
+    "type": "String",
+    "value": "images/generations:submit"
+  },
+  "AzureDALLERetrievalEndpoint": {
+    "type": "String",
+    "value": "operations/images/"
+  },
+  "AzureAPIVersion": {
+    "type": "String",
+    "value": "2023-06-01-preview"
   }
 }

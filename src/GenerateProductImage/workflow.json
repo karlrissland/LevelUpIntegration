@@ -1,10 +1,286 @@
 {
-  "definition": {
-    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-    "actions": {},
-    "contentVersion": "1.0.0.0",
-    "outputs": {},
-    "triggers": {}
-  },
-  "kind": "Stateful"
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Response": {
+                "type": "Response",
+                "kind": "Http",
+                "inputs": {
+                    "statusCode": 200,
+                    "body": {
+                        "generatedImageLocation": "@{variables('ImgLocationURL')}"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_ImgLocationURL": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Submit_Image_To_DALL-E": {
+                "type": "Http",
+                "inputs": {
+                    "uri": "@{parameters('AzureAiBaseEndpoint')}@{parameters('AzureDALLEEndpoint')}",
+                    "method": "POST",
+                    "headers": {
+                        "api-key": "@{parameters('AOAIAPIKey')}"
+                    },
+                    "queries": {
+                        "api-version": "@{parameters('AzureAPIVersion')}"
+                    },
+                    "body": {
+                        "prompt": "@{body('Parse_Image_Gen_Request')?['imageDescription']}",
+                        "size": "@{body('Parse_Image_Gen_Request')?['imageSize']}"
+                    }
+                },
+                "runAfter": {
+                    "Parse_Image_Gen_Request": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "Parse_Image_Gen_Request": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "imageDescription": {
+                                "type": "string"
+                            },
+                            "imageSize": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {}
+            },
+            "Parse_DALL-E_Response": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@body('Submit_Image_To_DALL-E')",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "status": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Submit_Image_To_DALL-E": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Image_Generation_Status": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ImgGenStatus",
+                            "type": "string",
+                            "value": "notRunning"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Parse_DALL-E_Response": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Until": {
+                "type": "Until",
+                "expression": "@equals(variables('ImgGenStatus'),'succeeded')",
+                "limit": {
+                    "count": 3,
+                    "timeout": "PT1H"
+                },
+                "actions": {
+                    "Delay": {
+                        "type": "Wait",
+                        "inputs": {
+                            "interval": {
+                                "count": 5,
+                                "unit": "Second"
+                            }
+                        }
+                    },
+                    "Request_Image_Status": {
+                        "type": "Http",
+                        "inputs": {
+                            "uri": "@{parameters('AzureAiBaseEndpoint')}@{parameters('AzureDALLERetrievalEndpoint')}@{body('Parse_DALL-E_Response')?['id']}",
+                            "method": "GET",
+                            "headers": {
+                                "api-key": "@{parameters('AOAIAPIKey')}"
+                            },
+                            "queries": {
+                                "api-version": "@{parameters('AzureAPIVersion')}"
+                            }
+                        },
+                        "runAfter": {
+                            "Delay": [
+                                "SUCCEEDED"
+                            ]
+                        },
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        }
+                    },
+                    "Parse_Image_Retrieval_Response": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@body('Request_Image_Status')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "created": {
+                                        "type": "integer"
+                                    },
+                                    "expires": {
+                                        "type": "integer"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "result": {
+                                        "type": "object",
+                                        "properties": {
+                                            "data": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "url": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "url"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Request_Image_Status": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Set_variable": {
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "ImgGenStatus",
+                            "value": "@body('Parse_Image_Retrieval_Response')?['status']"
+                        },
+                        "runAfter": {
+                            "Parse_Image_Retrieval_Response": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Image_Generation_Status": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_ImgLocationURL": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ImgLocationURL",
+                            "type": "string",
+                            "value": "@{body('Parse_Image_Retrieval_Response')?['result']['data'][0]['url']}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Until": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "imageDescription": {
+                                "type": "string"
+                            },
+                            "imageSize": {
+                                "type": "string"
+                            },
+                            "numberOfImages": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "parameters": {
+            "AzureAiBaseEndpoint": {
+                "type": "String",
+                "value": "https://aoai-scott.openai.azure.com/openai/",
+                "defaultValue": "https://aoai-scott.openai.azure.com/openai/"
+            },
+            "DavinciEndpoint": {
+                "type": "String",
+                "value": "deployments/scott-davinci/completions",
+                "defaultValue": "deployments/scott-davinci/completions"
+            },
+            "AOAIAPIKey": {
+                "type": "String",
+                "value": "[KEY]",
+                "defaultValue": "[KEY]"
+            },
+            "AzureDALLEEndpoint": {
+                "type": "String",
+                "value": "images/generations:submit",
+                "defaultValue": "images/generations:submit"
+            },
+            "AzureDALLERetrievalEndpoint": {
+                "type": "String",
+                "value": "operations/images/",
+                "defaultValue": "operations/images/"
+            },
+            "AzureAPIVersion": {
+                "type": "String",
+                "value": "2023-06-01-preview",
+                "defaultValue": "2023-06-01-preview"
+            }
+        }
+    },
+    "kind": "Stateful"
 }

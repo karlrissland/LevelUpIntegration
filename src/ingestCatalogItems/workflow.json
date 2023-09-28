@@ -1,10 +1,191 @@
 {
-  "definition": {
-    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-    "actions": {},
-    "contentVersion": "1.0.0.0",
-    "outputs": {},
-    "triggers": {}
-  },
-  "kind": "Stateful"
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "XML_Validation": {
+                "type": "XmlValidation",
+                "inputs": {
+                    "content": "@xml(body('Read_blob_content')?['content'])",
+                    "schema": {
+                        "source": "LogicApp",
+                        "name": "vendorschema.xsd"
+                    }
+                },
+                "runAfter": {
+                    "Read_blob_content": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "trackedProperties": {
+                    "batchid": ""
+                }
+            },
+            "Read_blob_content": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "containerName": "@triggerBody()?['containerInfo']?['name']",
+                        "blobName": "@triggerBody()?['name']"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "AzureBlob",
+                        "operationId": "readBlob",
+                        "serviceProviderId": "/serviceProviders/AzureBlob"
+                    }
+                },
+                "runAfter": {},
+                "trackedProperties": {
+                    "batchid": "@xpath(xml(body('Read_blob_content')?['content']), '/root/batchId/text()')",
+                    "test": "test"
+                }
+            },
+            "Transform_using_Data_Mapper_XSLT": {
+                "type": "Xslt",
+                "kind": "DataMapper",
+                "inputs": {
+                    "content": "@xml(body('Read_blob_content')?['content'])",
+                    "map": {
+                        "source": "LogicApp",
+                        "name": "vendor-to-internal.xslt"
+                    }
+                },
+                "runAfter": {
+                    "archive_to_processing": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Upload_transformed_content_to_outbound": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "containerName": "outbound",
+                        "blobName": "test.xml",
+                        "content": "@body('Transform_using_Data_Mapper_XSLT')",
+                        "overrideIfExists": "true"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "AzureBlob",
+                        "operationId": "uploadBlob",
+                        "serviceProviderId": "/serviceProviders/AzureBlob"
+                    }
+                },
+                "runAfter": {
+                    "Transform_using_Data_Mapper_XSLT": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "archive_to_completed": {
+                "type": "Scope",
+                "actions": {
+                    "copy_from_processing_to_completed": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "sourceContainerName": "processing",
+                                "sourceBlobName": "@triggerBody()?['name']",
+                                "destinationContainerName": "completed",
+                                "destinationBlobName": "@triggerBody()?['name']",
+                                "overrideIfExists": true
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "AzureBlob",
+                                "operationId": "copyBlob",
+                                "serviceProviderId": "/serviceProviders/AzureBlob"
+                            }
+                        }
+                    },
+                    "delete_from_processing": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "containerName": "processing",
+                                "blobName": "@triggerBody()?['name']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "AzureBlob",
+                                "operationId": "deleteBlob",
+                                "serviceProviderId": "/serviceProviders/AzureBlob"
+                            }
+                        },
+                        "runAfter": {
+                            "copy_from_processing_to_completed": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Upload_transformed_content_to_outbound": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "archive_to_processing": {
+                "type": "Scope",
+                "actions": {
+                    "Copy_from_inbound_to_processing": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "sourceContainerName": "@triggerBody()?['containerInfo']?['name']",
+                                "sourceBlobName": "@triggerBody()?['name']",
+                                "destinationContainerName": "processing",
+                                "destinationBlobName": "@triggerBody()?['name']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "AzureBlob",
+                                "operationId": "copyBlob",
+                                "serviceProviderId": "/serviceProviders/AzureBlob"
+                            }
+                        }
+                    },
+                    "Delete_blob_from_inbound": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "containerName": "@triggerBody()?['containerInfo']?['name']",
+                                "blobName": "@triggerBody()?['name']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "AzureBlob",
+                                "operationId": "deleteBlob",
+                                "serviceProviderId": "/serviceProviders/AzureBlob"
+                            }
+                        },
+                        "runAfter": {
+                            "Copy_from_inbound_to_processing": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "XML_Validation": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "When_a_blob_is_added_to_inbound": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "path": "inbound"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "AzureBlob",
+                        "operationId": "whenABlobIsAddedOrModified",
+                        "serviceProviderId": "/serviceProviders/AzureBlob"
+                    }
+                }
+            }
+        },
+        "parameters": {}
+    },
+    "kind": "Stateful"
 }

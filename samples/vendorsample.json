@@ -1,0 +1,46 @@
+{
+	"root": {
+	  "batchId": "12345",
+	  "vendor": "contoso",
+	  "catalogitems": {
+		"catalogitem": [
+		  {
+			"sku": "123",
+			"name": "k",
+			"shortdesc": "",
+			"specifications": {
+			  "specification": [
+				{
+				  "name": "spec1",
+				  "value": "value1"
+				},
+				{
+				  "name": "spec2",
+				  "value": "value2"
+				}
+			  ]
+			},
+			"suggestedretailprice": "100"
+		  },
+		  {
+			"sku": "123",
+			"name": "k",
+			"shortdesc": "",
+			"specifications": {
+			  "specification": [
+				{
+				  "name": "spec1",
+				  "value": "value1"
+				},
+				{
+				  "name": "spec2",
+				  "value": "value2"
+				}
+			  ]
+			},
+			"suggestedretailprice": "100"
+		  }
+		]
+	  }
+	}
+  }

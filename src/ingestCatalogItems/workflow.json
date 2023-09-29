@@ -17,7 +17,7 @@
                     ]
                 },
                 "trackedProperties": {
-                    "batchid": ""
+                    "batchid": "@xpath(xml(body('Read_blob_content')?['content']), '/root/batchId/text()')"
                 }
             },
             "Read_blob_content": {
@@ -50,7 +50,7 @@
                     }
                 },
                 "runAfter": {
-                    "archive_to_processing": [
+                    "Delete_blob_from_inbound": [
                         "SUCCEEDED"
                     ]
                 }
@@ -76,89 +76,17 @@
                     ]
                 }
             },
-            "archive_to_completed": {
-                "type": "Scope",
-                "actions": {
-                    "copy_from_processing_to_completed": {
-                        "type": "ServiceProvider",
-                        "inputs": {
-                            "parameters": {
-                                "sourceContainerName": "processing",
-                                "sourceBlobName": "@triggerBody()?['name']",
-                                "destinationContainerName": "completed",
-                                "destinationBlobName": "@triggerBody()?['name']",
-                                "overrideIfExists": true
-                            },
-                            "serviceProviderConfiguration": {
-                                "connectionName": "AzureBlob",
-                                "operationId": "copyBlob",
-                                "serviceProviderId": "/serviceProviders/AzureBlob"
-                            }
-                        }
+            "Delete_blob_from_inbound": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "containerName": "@triggerBody()?['containerInfo']?['name']",
+                        "blobName": "@triggerBody()?['name']"
                     },
-                    "delete_from_processing": {
-                        "type": "ServiceProvider",
-                        "inputs": {
-                            "parameters": {
-                                "containerName": "processing",
-                                "blobName": "@triggerBody()?['name']"
-                            },
-                            "serviceProviderConfiguration": {
-                                "connectionName": "AzureBlob",
-                                "operationId": "deleteBlob",
-                                "serviceProviderId": "/serviceProviders/AzureBlob"
-                            }
-                        },
-                        "runAfter": {
-                            "copy_from_processing_to_completed": [
-                                "SUCCEEDED"
-                            ]
-                        }
-                    }
-                },
-                "runAfter": {
-                    "Upload_transformed_content_to_outbound": [
-                        "SUCCEEDED"
-                    ]
-                }
-            },
-            "archive_to_processing": {
-                "type": "Scope",
-                "actions": {
-                    "Copy_from_inbound_to_processing": {
-                        "type": "ServiceProvider",
-                        "inputs": {
-                            "parameters": {
-                                "sourceContainerName": "@triggerBody()?['containerInfo']?['name']",
-                                "sourceBlobName": "@triggerBody()?['name']",
-                                "destinationContainerName": "processing",
-                                "destinationBlobName": "@triggerBody()?['name']"
-                            },
-                            "serviceProviderConfiguration": {
-                                "connectionName": "AzureBlob",
-                                "operationId": "copyBlob",
-                                "serviceProviderId": "/serviceProviders/AzureBlob"
-                            }
-                        }
-                    },
-                    "Delete_blob_from_inbound": {
-                        "type": "ServiceProvider",
-                        "inputs": {
-                            "parameters": {
-                                "containerName": "@triggerBody()?['containerInfo']?['name']",
-                                "blobName": "@triggerBody()?['name']"
-                            },
-                            "serviceProviderConfiguration": {
-                                "connectionName": "AzureBlob",
-                                "operationId": "deleteBlob",
-                                "serviceProviderId": "/serviceProviders/AzureBlob"
-                            }
-                        },
-                        "runAfter": {
-                            "Copy_from_inbound_to_processing": [
-                                "SUCCEEDED"
-                            ]
-                        }
+                    "serviceProviderConfiguration": {
+                        "connectionName": "AzureBlob",
+                        "operationId": "deleteBlob",
+                        "serviceProviderId": "/serviceProviders/AzureBlob"
                     }
                 },
                 "runAfter": {

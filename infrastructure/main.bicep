@@ -9,7 +9,7 @@ param location string = deployment().location
 
 //variables
 var ResourceGroupName = 'levelupIntegration-${environment}'
-var uniqueSuffix = substring(uniqueString(ResourceGroupName),0,6)
+var uniqueSuffix = substring(uniqueString('${ResourceGroupName}${subscription().id}'), 0, 6)
 var resourceSuffix = '${uniqueSuffix}-${environment}'
 var keyVaultName = 'kv-${resourceSuffix}'
 var logAnalyticsWorkspaceName = 'la-ingest-${resourceSuffix}'

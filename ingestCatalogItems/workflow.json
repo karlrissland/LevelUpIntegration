@@ -15,9 +15,6 @@
                     "Read_blob_content": [
                         "SUCCEEDED"
                     ]
-                },
-                "trackedProperties": {
-                    "batchid": "@xpath(xml(body('Read_blob_content')?['content']), '/root/batchId/text()')"
                 }
             },
             "Read_blob_content": {

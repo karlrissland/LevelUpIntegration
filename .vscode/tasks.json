@@ -10,7 +10,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -19,7 +19,7 @@
 			"problemMatcher": "$func-watch",
 			"isBackground": true,
 			"options": {
-				"cwd": "${workspaceFolder}/src"
+				"cwd": "${workspaceFolder}"
 			}
 		}
 	],

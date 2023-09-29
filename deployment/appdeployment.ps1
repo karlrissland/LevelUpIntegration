@@ -1,6 +1,6 @@
 ## Store Master deployment script
 ## Call the script using the following command
-##   .\deployStoreMaster.ps1 -SubscriptionId "{SubscriptionId}" -ResourceGroupName "{ResourceGroupName}" -KeyVaultName "{KeyVaultName}"
+##   .\appdeployment.ps1 -SubscriptionId "{SubscriptionId}" -ResourceGroupName "{ResourceGroupName}" -KeyVaultName "{KeyVaultName}"
 ##
 ## Note: you will have to make sure you have access to the keyvault.  In the portal, go to the keyvault and add yourself as a keyvault access policy with secret permissions
 
@@ -31,7 +31,7 @@ $AzureBlob_ImageContainerName = "images"
 $batch_AzureBlob_connectionString = Invoke-Expression "az keyvault secret show --name 'storagePrimaryConnStr' --vault-name $KeyVaultName --query value -o tsv" 
 $openaiEndpoint = Invoke-Expression "az keyvault secret show --name 'openaiEndpoint' --vault-name $KeyVaultName --query value -o tsv" 
 $openaiKey = Invoke-Expression "az keyvault secret show --name 'openaiKey' --vault-name $KeyVaultName --query value -o tsv" 
-$opanaiName = Invoke-Expression "az keyvault secret show --name 'opanaiName' --vault-name $KeyVaultName --query value -o tsv" 
+$opanaiName = Invoke-Expression "az keyvault secret show --name 'openaiName' --vault-name $KeyVaultName --query value -o tsv" 
 $logicAppName = Invoke-Expression "az keyvault secret show --name 'logicAppName' --vault-name $KeyVaultName --query value -o tsv" 
 
 Write-Host "- Variable setup complete"
@@ -39,8 +39,10 @@ Write-Host "- Variable setup complete"
 ##----------------------------------------------
 ## Deploy Azure Logic Apps
 Write-Host "- Setting up Logic App"
-Compress-Archive -Path "*" -DestinationPath "LogicApp.zip" -Force
-az logicapp deployment source config-zip --name $LogicAppName  --resource-group $resourceGroupName --subscription $SubscriptionId --src StoreMasterLogicApp.zip
+$files = Get-ChildItem -Path ../ -File 
+$directories = Get-ChildItem -Path ../ -Recurse -Directory -Exclude "deployment", "docs", "infrastructure", "sample-messages"
+Compress-Archive -Path $($files + $directories) -DestinationPath LogicApp.zip
+az logicapp deployment source config-zip --name $LogicAppName  --resource-group $resourceGroupName --subscription $SubscriptionId --src LogicApp.zip
 az logicapp config appsettings set --name $logicAppName --resource-group $resourceGroupName --subscription $SubscriptionId --settings "AzureBlob_connectionString=$batch_AzureBlob_connectionString"
 az logicapp config appsettings set --name $logicAppName --resource-group $resourceGroupName --subscription $SubscriptionId --settings "AzureBlob_InboundContainerName=$batch_AzureBlob_InboundContainerName"
 az logicapp config appsettings set --name $logicAppName --resource-group $resourceGroupName --subscription $SubscriptionId --settings "AzureBlob_OutboundContainerName=$batch_AzureBlob_OutboundContainerName"

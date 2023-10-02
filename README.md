@@ -30,3 +30,6 @@ Required vscode extensions:
 5. Run `az account set --subscription <subscription id>` to set the subscription you want to use
 6. Navigate to the deployoment directory and run `./checkenvironment.ps1` to check if you have all the required components installed locally
 
+If you are missing any required components, please install and rerun the checkenvironment script until you have all the required components installed.
+
+When everything looks good, head over to the workshop to get started; [workshop](docs/workshop.md)

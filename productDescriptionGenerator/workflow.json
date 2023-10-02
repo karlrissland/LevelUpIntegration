@@ -1,0 +1,313 @@
+{
+  "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "actions": {
+          "Response": {
+              "type": "Response",
+              "kind": "Http",
+              "inputs": {
+                  "statusCode": 200,
+                  "body": {
+                      "generatedProductDescription": "@{variables('ProductDescription')}"
+                  }
+              },
+              "runAfter": {
+                  "Initialize_Product_Description": [
+                      "SUCCEEDED"
+                  ]
+              }
+          },
+          "Call_Davinci_Text_Completion": {
+              "type": "Http",
+              "inputs": {
+                  "uri": "@{parameters('AzureAiBaseEndpoint')}@{parameters('DavinciEndpoint')}",
+                  "method": "POST",
+                  "headers": {
+                      "api-key": "@{parameters('AOAIAPIKey')}"
+                  },
+                  "queries": {
+                      "api-version": "@{parameters('AzureAPIVersion')}"
+                  },
+                  "body": {
+                      "prompt": "You are generating descriptions for products to be sold online.  Create a consice product description for: @{body('Parse_Input_JSON')?['productDescription']}",
+                      "max_tokens": 300,
+                      "n": 1
+                  }
+              },
+              "runAfter": {
+                  "Parse_Input_JSON": [
+                      "SUCCEEDED"
+                  ]
+              },
+              "runtimeConfiguration": {
+                  "contentTransfer": {
+                      "transferMode": "Chunked"
+                  }
+              }
+          },
+          "Parse_Input_JSON": {
+              "type": "ParseJson",
+              "inputs": {
+                  "content": "@triggerBody()",
+                  "schema": {
+                      "type": "object",
+                      "properties": {
+                          "productDescription": {
+                              "type": "string"
+                          }
+                      }
+                  }
+              },
+              "runAfter": {}
+          },
+          "Parse_Davinci_Response": {
+              "type": "ParseJson",
+              "inputs": {
+                  "content": "@body('Call_Davinci_Text_Completion')",
+                  "schema": {
+                      "type": "object",
+                      "properties": {
+                          "id": {
+                              "type": "string"
+                          },
+                          "object": {
+                              "type": "string"
+                          },
+                          "created": {
+                              "type": "integer"
+                          },
+                          "model": {
+                              "type": "string"
+                          },
+                          "prompt_annotations": {
+                              "type": "array",
+                              "items": {
+                                  "type": "object",
+                                  "properties": {
+                                      "prompt_index": {
+                                          "type": "integer"
+                                      },
+                                      "content_filter_results": {
+                                          "type": "object",
+                                          "properties": {
+                                              "hate": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              },
+                                              "self_harm": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              },
+                                              "sexual": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              },
+                                              "violence": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      }
+                                  },
+                                  "required": [
+                                      "prompt_index",
+                                      "content_filter_results"
+                                  ]
+                              }
+                          },
+                          "choices": {
+                              "type": "array",
+                              "items": {
+                                  "type": "object",
+                                  "properties": {
+                                      "text": {
+                                          "type": "string"
+                                      },
+                                      "index": {
+                                          "type": "integer"
+                                      },
+                                      "finish_reason": {
+                                          "type": "string"
+                                      },
+                                      "logprobs": {},
+                                      "content_filter_results": {
+                                          "type": "object",
+                                          "properties": {
+                                              "hate": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              },
+                                              "self_harm": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              },
+                                              "sexual": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              },
+                                              "violence": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                      "filtered": {
+                                                          "type": "boolean"
+                                                      },
+                                                      "severity": {
+                                                          "type": "string"
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      }
+                                  },
+                                  "required": [
+                                      "text",
+                                      "index",
+                                      "finish_reason",
+                                      "logprobs",
+                                      "content_filter_results"
+                                  ]
+                              }
+                          },
+                          "usage": {
+                              "type": "object",
+                              "properties": {
+                                  "completion_tokens": {
+                                      "type": "integer"
+                                  },
+                                  "prompt_tokens": {
+                                      "type": "integer"
+                                  },
+                                  "total_tokens": {
+                                      "type": "integer"
+                                  }
+                              }
+                          }
+                      }
+                  }
+              },
+              "runAfter": {
+                  "Call_Davinci_Text_Completion": [
+                      "SUCCEEDED"
+                  ]
+              }
+          },
+          "Initialize_Product_Description": {
+              "type": "InitializeVariable",
+              "inputs": {
+                  "variables": [
+                      {
+                          "name": "ProductDescription",
+                          "type": "string",
+                          "value": "@{body('Parse_Davinci_Response')?['choices'][0]['text']}"
+                      }
+                  ]
+              },
+              "runAfter": {
+                  "Parse_Davinci_Response": [
+                      "SUCCEEDED"
+                  ]
+              }
+          }
+      },
+      "contentVersion": "1.0.0.0",
+      "outputs": {},
+      "triggers": {
+          "When_a_HTTP_request_is_received": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                  "schema": {
+                      "type": "object",
+                      "properties": {
+                          "product-description": {
+                              "type": "string"
+                          }
+                      }
+                  }
+              }
+          }
+      },
+      "parameters": {
+          "AzureAiBaseEndpoint": {
+              "type": "String",
+              "value": "",
+              "defaultValue": ""
+          },
+          "DavinciEndpoint": {
+              "type": "String",
+              "value": "",
+              "defaultValue": ""
+          },
+          "AOAIAPIKey": {
+              "type": "String",
+              "value": "",
+              "defaultValue": ""
+          },
+          "AzureDALLEEndpoint": {
+              "type": "String",
+              "value": "images/generations:submit",
+              "defaultValue": "images/generations:submit"
+          },
+          "AzureDALLERetrievalEndpoint": {
+              "type": "String",
+              "value": "operations/images/",
+              "defaultValue": "operations/images/"
+          },
+          "AzureAPIVersion": {
+              "type": "String",
+              "value": "",
+              "defaultValue": ""
+          }
+      }
+  },
+  "kind": "Stateful"
+}

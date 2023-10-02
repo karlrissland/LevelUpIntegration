@@ -1,0 +1,26 @@
+{
+    "AzureAiBaseEndpoint": {
+      "type": "String",
+      "value": "@appsetting('openaiEndpoint')"
+    },
+    "DavinciEndpoint": {
+      "type": "String",
+      "value": "@appsetting('davinciDeployment')"
+    },
+    "AOAIAPIKey": {
+      "type": "String",
+      "value": "@appsetting('openaiKey')"
+    },
+    "AzureDALLEEndpoint": {
+      "type": "String",
+      "value": "images/generations:submit"
+    },
+    "AzureDALLERetrievalEndpoint": {
+      "type": "String",
+      "value": "operations/images/"
+    },
+    "AzureAPIVersion": {
+      "type": "String",
+      "value": "@appsetting('azureOpenAIAPIVersion')"
+    }
+  }

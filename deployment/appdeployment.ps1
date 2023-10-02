@@ -41,7 +41,7 @@ Write-Host "- Variable setup complete"
 Write-Host "- Setting up Logic App"
 $files = Get-ChildItem -Path ../ -File 
 $directories = Get-ChildItem -Path ../ -Recurse -Directory -Exclude "deployment", "docs", "infrastructure", "sample-messages"
-Compress-Archive -Path $($files + $directories) -DestinationPath LogicApp.zip
+Compress-Archive -Path $($files + $directories) -DestinationPath LogicApp.zip -Force
 az logicapp deployment source config-zip --name $LogicAppName  --resource-group $resourceGroupName --subscription $SubscriptionId --src LogicApp.zip
 az logicapp config appsettings set --name $logicAppName --resource-group $resourceGroupName --subscription $SubscriptionId --settings "AzureBlob_connectionString=$batch_AzureBlob_connectionString"
 az logicapp config appsettings set --name $logicAppName --resource-group $resourceGroupName --subscription $SubscriptionId --settings "AzureBlob_InboundContainerName=$batch_AzureBlob_InboundContainerName"

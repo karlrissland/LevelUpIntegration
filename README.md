@@ -5,42 +5,31 @@ Note: we are unable to provide a codespace for LogicApp Standard Development as 
 
 Pre-requisites 
 
-to be installed on your local machine:
-- Azurite
-- Azure Storage Explorer
+Required Software:
 - Azure CLI
 - Azure Functions Core Tools
 - Visual Studio Code
 - .NET Core SDK
-- Microsoft Azure Storage Explorer
 
-Extensions to be installed in Visual Studio Code:
-- Azure Logic Apps (Standard)
-- Azure Functions
-- Azure Logic Apps - Data Mapper
-- Azurite
+Required vscode extensions:
+- Azurite.azurite 
+- ms-vscode.azurecli 
+- ms-vscode.azure-account 
+- ms-dotnettools.csharp 
+- ms-dotnettools.csdevkit 
+- ms-azuretools.azure-dev 
+- ms-azuretools.vscode-azurefunctions 
+- ms-azuretools.vscode-azurelogicapps 
+- ms-azuretools.data-mapper-vscode-extension 
 
+## Getting Started
+1. Clone the repo
+2. Open the repo in vscode
+3. Open the terminal in vscode  
+4. Run `az login` to login to your azure account
+5. Run `az account set --subscription <subscription id>` to set the subscription you want to use
+6. Navigate to the deployoment directory and run `./checkenvironment.ps1` to check if you have all the required components installed locally
 
-To run the project locally, you will need to have Azurite running. Azurite is a local emulator for Azure Storage. You can install it via the visual studio code marketplace.
+If you are missing any required components, please install and rerun the checkenvironment script until you have all the required components installed.
 
-Once installed, you can create the two required containers by running the following commands in the terminal:
-
-```
-az storage container create --name inbound --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-
-az storage container create --name outbound --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-```
-
-The Azurite AccountKey and AccountName default to the values above. If you have changed these values, you will need to update the connection strings in the commands above.
-
-The connection string you will use with the storage account connector is the following:
-
-```
-"DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-```
-
-Install Microsoft Azure Storage Explorer to view and manage the contents of the containers.  This can be done with WinGet
-
-```
- winget install Microsoft.Azure.StorageExplorer  
-```
+When everything looks good, head over to the workshop to get started; [workshop](docs/workshop.md)

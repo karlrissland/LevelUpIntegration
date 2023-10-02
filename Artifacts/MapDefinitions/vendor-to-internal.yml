@@ -1,0 +1,28 @@
+$version: 1
+$input: XML
+$output: XML
+$sourceSchema: vendorschema.xsd
+$targetSchema: internalschema.xsd
+$sourceNamespaces:
+  xs: http://www.w3.org/2001/XMLSchema
+$targetNamespaces:
+  xs: http://www.w3.org/2001/XMLSchema
+root:
+  catalogitems:
+    $for(/root/catalogitems/catalogitem):
+      catalogitem:
+        vendor: /root/vendor
+        sku: concat(/root/vendor, string(sku))
+        vendorsku: string(sku)
+        name: name
+        shortdesc: shortdesc
+        specifications:
+          $for(specifications/specification):
+            specification:
+              name: name
+              value: value
+        suggestedretailprices:
+          $for(/root/catalogitems/catalogitem):
+            suggestedretailprice:
+              currency: "USD"
+              price: suggestedretailprice

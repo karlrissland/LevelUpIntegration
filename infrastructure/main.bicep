@@ -8,17 +8,15 @@ param environment string = 'dev'
 param location string = deployment().location
 
 //variables
-var uniqueSuffix = substring(uniqueString(concat(subscription().id),environment),0,6)
+var ResourceGroupName = 'levelupIntegration-${environment}'
+var uniqueSuffix = substring(uniqueString('${ResourceGroupName}${subscription().id}'), 0, 6)
 var resourceSuffix = '${uniqueSuffix}-${environment}'
-var ResourceGroupName = 'WMInterfaces-${resourceSuffix}'
-var serviceBusName = 'sb-${resourceSuffix}'
 var keyVaultName = 'kv-${resourceSuffix}'
-var functionAppName = 'func-${resourceSuffix}'
 var logAnalyticsWorkspaceName = 'la-ingest-${resourceSuffix}'
 var appInsightsName = 'ai-${resourceSuffix}'
 var logicAppName = 'logic-${resourceSuffix}'
 var storageName = 'st${resourceSuffix}'
-var sqlServerName = 'sql-${resourceSuffix}'
+var openaiName = 'openai-${resourceSuffix}'
 
 
 resource RG 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -54,6 +52,17 @@ module AppInsights 'appinsights.bicep' = {
     applicationInsightsName: appInsightsName
     location: location
   }
+}
+
+module openaiDeploy 'openai.bicep' = {
+  name: 'openai'
+  scope: RG
+  params: {
+    resourceName: openaiName
+    location: location
+    keyVaultName: keyVaultName
+  }
+  dependsOn: [KeyVaultDeploy]
 }
 
 module LogicAppDeploy 'logicapp.bicep' = {

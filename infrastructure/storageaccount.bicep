@@ -6,8 +6,8 @@ param location string = resourceGroup().location
 param keyVaultName string
 
 var storageAccountName = replace('genstor${toLower(substring(resourceName,0,8))}','-','')
-var storeMasterContainerName = 'storemaster'
-var ASNContainerName = 'asn'
+var inboundContainerName = 'inbound'
+var outboundContainerName = 'outbound'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: storageAccountName
@@ -25,7 +25,7 @@ resource storageAccountsBlobServices_resource 'Microsoft.Storage/storageAccounts
 
 resource storeMasterStorageAccountsContainer_resource 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-09-01' = {
   parent: storageAccountsBlobServices_resource
-  name: storeMasterContainerName
+  name: inboundContainerName
   properties: {
     immutableStorageWithVersioning: {
       enabled: false
@@ -38,7 +38,7 @@ resource storeMasterStorageAccountsContainer_resource 'Microsoft.Storage/storage
 
 resource ASNStorageAccountsContainer_resource 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-09-01' = {
   parent: storageAccountsBlobServices_resource
-  name: ASNContainerName
+  name: outboundContainerName
   properties: {
     immutableStorageWithVersioning: {
       enabled: false

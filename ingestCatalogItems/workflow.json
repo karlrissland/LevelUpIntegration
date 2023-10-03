@@ -12,7 +12,7 @@
                     }
                 },
                 "runAfter": {
-                    "Read_blob_content": [
+                    "GetBatchId": [
                         "SUCCEEDED"
                     ]
                 }
@@ -57,7 +57,7 @@
                 "inputs": {
                     "parameters": {
                         "containerName": "outbound",
-                        "blobName": "test.xml",
+                        "blobName": "Batch@{variables('BatchId')}.xml",
                         "content": "@body('Transform_using_Data_Mapper_XSLT')",
                         "overrideIfExists": "true"
                     },
@@ -92,19 +92,19 @@
                     ]
                 }
             },
-            "Initialize_variable": {
+            "GetBatchId": {
                 "type": "InitializeVariable",
                 "inputs": {
                     "variables": [
                         {
-                            "name": "jsoncatalog",
-                            "type": "object",
-                            "value": "@json(body('Transform_using_Data_Mapper_XSLT'))"
+                            "name": "BatchId",
+                            "type": "string",
+                            "value": "@{xpath(xml(body('Read_blob_content')?['content']),'/root/batchId/text()')}"
                         }
                     ]
                 },
                 "runAfter": {
-                    "Transform_using_Data_Mapper_XSLT": [
+                    "Read_blob_content": [
                         "SUCCEEDED"
                     ]
                 }

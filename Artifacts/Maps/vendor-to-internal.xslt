@@ -25,7 +25,6 @@
               <xsl:for-each select="/root/catalogitems/catalogitem">
                 <suggestedretailprice>
                   <currency>{'USD'}</currency>
-                  <price>{suggestedretailprice}</price>
                 </suggestedretailprice>
               </xsl:for-each>
             </suggestedretailprices>

@@ -68,7 +68,7 @@
                     }
                 },
                 "runAfter": {
-                    "Initialize_variable": [
+                    "Transform_using_Data_Mapper_XSLT": [
                         "SUCCEEDED"
                     ]
                 }
@@ -127,38 +127,7 @@
                 }
             }
         },
-        "parameters": {
-            "AzureAiBaseEndpoint": {
-                "type": "String",
-                "value": "@appsetting('openaiEndpoint')",
-                "defaultValue": "@appsetting('openaiEndpoint')"
-            },
-            "DavinciEndpoint": {
-                "type": "String",
-                "value": "@appsetting('davinciDeployment')",
-                "defaultValue": "@appsetting('davinciDeployment')"
-            },
-            "AOAIAPIKey": {
-                "type": "String",
-                "value": "@appsetting('openaiKey')",
-                "defaultValue": "@appsetting('openaiKey')"
-            },
-            "AzureDALLEEndpoint": {
-                "type": "String",
-                "value": "images/generations:submit",
-                "defaultValue": "images/generations:submit"
-            },
-            "AzureDALLERetrievalEndpoint": {
-                "type": "String",
-                "value": "operations/images/",
-                "defaultValue": "operations/images/"
-            },
-            "AzureAPIVersion": {
-                "type": "String",
-                "value": "@appsetting('azureOpenAIAPIVersion')",
-                "defaultValue": "@appsetting('azureOpenAIAPIVersion')"
-            }
-        }
+        "parameters": {}
     },
     "kind": "Stateful"
 }

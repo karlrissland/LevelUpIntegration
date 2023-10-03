@@ -85,4 +85,12 @@ You should see the file in the inbound container for a few seconds before it is 
 
 Go back to the logic app, workflows, and click on the ingestCatalogItems workflow.  Similar to the local development experience, you should see the run history and details of the run.  You can also see the telemetry in application insights.
 
-## Part 2
+## Part 2 - incorporate generative AI
+The ecommerce department is interested in leveraging generative AI to create product descriptions.  The descriptions they receive from their vendors are not very good and at times only a short description.  They would like to leverage the product name, short description, and any specifications provided to create a more robust description.  You are being asked to enhance the existing catalog ingestion process to support the scenario.
+
+
+### Step 1 - Create the OpenAI Workflow
+
+
+### Step 2 - Update the catalog ingestion workflow to call the OpenAI workflow
+

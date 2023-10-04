@@ -4,7 +4,7 @@
   <xs:element name="root">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="batchId" type="xs:unsignedShort" />
+        <xs:element name="batchId" type="xs:string" />
         <xs:element name="vendor" type="xs:string" />
         <xs:element name="catalogitems">
           <xs:complexType>
@@ -12,7 +12,7 @@
               <xs:element maxOccurs="unbounded" name="catalogitem">
                 <xs:complexType>
                   <xs:sequence>
-                    <xs:element name="sku" type="xs:unsignedByte" />
+                    <xs:element name="sku" type="xs:string" />
                     <xs:element name="name" type="xs:string" />
                     <xs:element name="shortdesc" />
                     <xs:element name="specifications">

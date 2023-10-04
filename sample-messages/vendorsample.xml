@@ -4,8 +4,8 @@
     <catalogitems>
         <catalogitem>
             <sku>123</sku>
-            <name>k</name>
-            <shortdesc></shortdesc>
+            <name>Ball</name>
+            <shortdesc>This is a big red ball</shortdesc>
             <specifications>
                 <specification>
                     <name>spec1</name>
@@ -19,9 +19,9 @@
             <suggestedretailprice>100</suggestedretailprice>
         </catalogitem>
         <catalogitem>
-            <sku>123</sku>
-            <name>k</name>
-            <shortdesc></shortdesc>
+            <sku>456</sku>
+            <name>Bat</name>
+            <shortdesc>This is a bit wood bat</shortdesc>
             <specifications>
                 <specification>
                     <name>spec1</name>

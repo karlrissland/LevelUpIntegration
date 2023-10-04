@@ -1,0 +1,24 @@
+$version: 1
+$input: XML
+$output: JSON
+$sourceSchema: internalschema.xsd
+$targetSchema: jsonInternalSchema.json
+$sourceNamespaces:
+  xs: http://www.w3.org/2001/XMLSchema
+root:
+  catalogItems:
+    $for(/root/catalogitems/catalogitem):
+      vendor: vendor
+      sku: sku
+      vendorSku: vendorsku
+      name: name
+      shortDesc: shortdesc
+      specifications:
+        $for(specifications/specification):
+          name: name
+          value: value
+      longDesc: longdesc
+      suggestedRetailPrices:
+        $for(suggestedretailprices/suggestedretailprice):
+          currency: currency
+          price: string(price)

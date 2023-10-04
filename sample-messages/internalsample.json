@@ -1,81 +1,60 @@
-[
-  {
-    "name": "jsoncatalog",
-    "type": "Object",
-    "value": {
-      "?xml": {
-        "@version": "1.0",
-        "@encoding": "UTF-8"
-      },
-      "root": {
-        "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "catalogitems": {
-          "catalogitem": [
-            {
-              "vendor": "contoso",
-              "sku": "contoso123",
-              "vendorsku": "123",
-              "name": "k",
-              "shortdesc": null,
-              "specifications": {
-                "specification": [
-                  {
-                    "name": "spec1",
-                    "value": "value1"
-                  },
-                  {
-                    "name": "spec2",
-                    "value": "value2"
-                  }
-                ]
-              },
-              "suggestedretailprices": {
-                "suggestedretailprice": [
-                  {
-                    "currency": "USD",
-                    "price": "100"
-                  },
-                  {
-                    "currency": "USD",
-                    "price": "100"
-                  }
-                ]
-              }
-            },
-            {
-              "vendor": "contoso",
-              "sku": "contoso123",
-              "vendorsku": "123",
-              "name": "k",
-              "shortdesc": null,
-              "specifications": {
-                "specification": [
-                  {
-                    "name": "spec1",
-                    "value": "value1"
-                  },
-                  {
-                    "name": "spec2",
-                    "value": "value2"
-                  }
-                ]
-              },
-              "suggestedretailprices": {
-                "suggestedretailprice": [
-                  {
-                    "currency": "USD",
-                    "price": "100"
-                  },
-                  {
-                    "currency": "USD",
-                    "price": "100"
-                  }
-                ]
-              }
-            }
-          ]
+{
+  "catalogItems": [
+    {
+      "vendor": "contoso",
+      "sku": "123",
+      "vendorSku": "123",
+      "name": "k",
+      "shortDesc": "shortdescription",
+      "specifications": [
+        {
+          "name": "spec1",
+          "value": "value1"
+        },
+        {
+          "name": "spec2",
+          "value": "value2"
         }
-      }
+      ],
+      "longDesc": "longdescription",
+      "suggestedRetailPrices": [
+        {
+          "currency": "USD",
+          "price": "100"
+        },
+        {
+          "currency": "EUR",
+          "price": "80"
+        }
+      ]
+    },
+    {
+      "vendor": "contoso",
+      "sku": "123",
+      "vendorSku": "123",
+      "name": "k",
+      "shortDesc": "shortdescription",
+      "specifications": [
+        {
+          "name": "spec1",
+          "value": "value1"
+        },
+        {
+          "name": "spec2",
+          "value": "value2"
+        }
+      ],
+      "longDesc": "longdescription",
+      "suggestedRetailPrices": [
+        {
+          "currency": "USD",
+          "price": "100"
+        },
+        {
+          "currency": "EUR",
+          "price": "80"
+        }
+      ]
     }
-  }
-]
+  ]
+}

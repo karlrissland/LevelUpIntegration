@@ -3,9 +3,9 @@
         <catalogitem>
             <vendor>contoso</vendor>
             <sku>123</sku>
-            <vendorsku>123</vendorsku>
-            <name>k</name>
-            <shortdesc>shortdescription</shortdesc>
+            <vendorsku>contoso123</vendorsku>
+            <name>ball</name>
+            <shortdesc>big red bouncy ball</shortdesc>
             <specifications>
                 <specification>
                     <name>spec1</name>
@@ -30,10 +30,10 @@
         </catalogitem>
         <catalogitem>
             <vendor>contoso</vendor>
-            <sku>123</sku>
-            <vendorsku>123</vendorsku>
-            <name>k</name>
-            <shortdesc>shortdescription</shortdesc>
+            <sku>456</sku>
+            <vendorsku>contoso456</vendorsku>
+            <name>bat</name>
+            <shortdesc>woden bat with taped handle</shortdesc>
             <specifications>
                 <specification>
                     <name>spec1</name>

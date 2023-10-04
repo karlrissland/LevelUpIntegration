@@ -1,0 +1,80 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+      "root": {
+        "type": "object",
+        "properties": {
+          "batchId": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "catalogitems": {
+            "type": "object",
+            "properties": {
+              "catalogitem": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sku": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "shortdesc": {},
+                    "specifications": {
+                      "type": "object",
+                      "properties": {
+                        "specification": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "value"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "suggestedretailprice": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "sku",
+                    "name",
+                    "specifications",
+                    "suggestedretailprice"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "catalogitem"
+            ]
+          }
+        },
+        "required": [
+          "batchId",
+          "vendor",
+          "catalogitems"
+        ]
+      }
+    },
+    "required": [
+      "root"
+    ]
+  }

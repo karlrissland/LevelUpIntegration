@@ -58,7 +58,7 @@
                     "parameters": {
                         "containerName": "outbound",
                         "blobName": "Batch@{variables('BatchId')}.xml",
-                        "content": "@body('Transform_using_Data_Mapper_XSLT')",
+                        "content": "@outputs('Compose_internal_batch_json')",
                         "overrideIfExists": "true"
                     },
                     "serviceProviderConfiguration": {
@@ -68,7 +68,7 @@
                     }
                 },
                 "runAfter": {
-                    "Initialize_variable": [
+                    "Compose_internal_batch_json": [
                         "SUCCEEDED"
                     ]
                 }
@@ -109,19 +109,44 @@
                     ]
                 }
             },
-            "Initialize_variable": {
-                "type": "InitializeVariable",
+            "Transform_xml_batch_to_JSON_batch_msg": {
+                "type": "Xslt",
+                "kind": "DataMapper",
                 "inputs": {
-                    "variables": [
-                        {
-                            "name": "JsonBatchMessage",
-                            "type": "object",
-                            "value": "@json(body('Transform_using_Data_Mapper_XSLT'))"
-                        }
-                    ]
+                    "content": "@body('Transform_using_Data_Mapper_XSLT')",
+                    "map": {
+                        "source": "LogicApp",
+                        "name": "internalXMLBatch-to-internalJSONBatch.xslt"
+                    }
                 },
                 "runAfter": {
                     "Transform_using_Data_Mapper_XSLT": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "For_each": {
+                "type": "Foreach",
+                "foreach": "@body('Transform_xml_batch_to_JSON_batch_msg')?['catalogItems']",
+                "actions": {
+                    "Compose": {
+                        "type": "Compose",
+                        "inputs": "@setProperty(item(),'longDesc','test long description')"
+                    }
+                },
+                "runAfter": {
+                    "Transform_xml_batch_to_JSON_batch_msg": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Compose_internal_batch_json": {
+                "type": "Compose",
+                "inputs": {
+                    "catalogItems": "@outputs('Compose')"
+                },
+                "runAfter": {
+                    "For_each": [
                         "SUCCEEDED"
                     ]
                 }

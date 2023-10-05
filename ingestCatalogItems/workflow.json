@@ -36,7 +36,7 @@
                     "test": "test"
                 }
             },
-            "Transform_using_Data_Mapper_XSLT": {
+            "Transform_-_vendor_batch_to_internal_batch": {
                 "type": "Xslt",
                 "kind": "DataMapper",
                 "inputs": {
@@ -58,7 +58,7 @@
                     "parameters": {
                         "containerName": "outbound",
                         "blobName": "Batch@{variables('BatchId')}.xml",
-                        "content": "@outputs('Compose_internal_batch_json')",
+                        "content": "@outputs('Compose_-_internal_batch_json')",
                         "overrideIfExists": "true"
                     },
                     "serviceProviderConfiguration": {
@@ -68,7 +68,7 @@
                     }
                 },
                 "runAfter": {
-                    "Compose_internal_batch_json": [
+                    "Compose_-_internal_batch_json": [
                         "SUCCEEDED"
                     ]
                 }
@@ -109,44 +109,62 @@
                     ]
                 }
             },
-            "Transform_xml_batch_to_JSON_batch_msg": {
+            "Transform_-_xml_batch_to_JSON_batch_msg": {
                 "type": "Xslt",
                 "kind": "DataMapper",
                 "inputs": {
-                    "content": "@body('Transform_using_Data_Mapper_XSLT')",
+                    "content": "@body('Transform_-_vendor_batch_to_internal_batch')",
                     "map": {
                         "source": "LogicApp",
                         "name": "internalXMLBatch-to-internalJSONBatch.xslt"
                     }
                 },
                 "runAfter": {
-                    "Transform_using_Data_Mapper_XSLT": [
+                    "Transform_-_vendor_batch_to_internal_batch": [
                         "SUCCEEDED"
                     ]
                 }
             },
-            "For_each": {
+            "For_each_-_batch_record": {
                 "type": "Foreach",
-                "foreach": "@body('Transform_xml_batch_to_JSON_batch_msg')?['catalogItems']",
+                "foreach": "@body('Transform_-_xml_batch_to_JSON_batch_msg')?['catalogItems']",
                 "actions": {
-                    "Compose": {
+                    "Compose_-_Update_Batch_Item": {
                         "type": "Compose",
-                        "inputs": "@setProperty(item(),'longDesc','test long description')"
+                        "inputs": "@setProperty(item(),'longDesc','test long description')",
+                        "runAfter": {
+                            "Invoke_a_workflow_in_this_workflow_app": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Invoke_a_workflow_in_this_workflow_app": {
+                        "type": "Workflow",
+                        "inputs": {
+                            "host": {
+                                "workflow": {
+                                    "id": "productDescriptionGenerator"
+                                }
+                            },
+                            "body": {
+                                "product-description": "{\n  \"product-description\": \"this is a really cool baseball bat\"\n}"
+                            }
+                        }
                     }
                 },
                 "runAfter": {
-                    "Transform_xml_batch_to_JSON_batch_msg": [
+                    "Transform_-_xml_batch_to_JSON_batch_msg": [
                         "SUCCEEDED"
                     ]
                 }
             },
-            "Compose_internal_batch_json": {
+            "Compose_-_internal_batch_json": {
                 "type": "Compose",
                 "inputs": {
-                    "catalogItems": "@outputs('Compose')"
+                    "catalogItems": "@outputs('Compose_-_Update_Batch_Item')"
                 },
                 "runAfter": {
-                    "For_each": [
+                    "For_each_-_batch_record": [
                         "SUCCEEDED"
                     ]
                 }

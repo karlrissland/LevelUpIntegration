@@ -34,31 +34,12 @@
                         "n": 1
                     }
                 },
-                "runAfter": {
-                    "Parse_Input_JSON": [
-                        "SUCCEEDED"
-                    ]
-                },
+                "runAfter": {},
                 "runtimeConfiguration": {
                     "contentTransfer": {
                         "transferMode": "Chunked"
                     }
                 }
-            },
-            "Parse_Input_JSON": {
-                "type": "ParseJson",
-                "inputs": {
-                    "content": "@triggerBody()",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "productDescription": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                "runAfter": {}
             },
             "Parse_Davinci_Response": {
                 "type": "ParseJson",

@@ -131,7 +131,7 @@
                 "actions": {
                     "Compose_-_Update_Batch_Item": {
                         "type": "Compose",
-                        "inputs": "@setProperty(item(),'longDesc','test long description')",
+                        "inputs": "@setProperty(item(),'longDesc',body('Invoke_a_workflow_in_this_workflow_app').generatedProductDescription)",
                         "runAfter": {
                             "Invoke_a_workflow_in_this_workflow_app": [
                                 "SUCCEEDED"
@@ -147,7 +147,7 @@
                                 }
                             },
                             "body": {
-                                "product-description": "{\n  \"product-description\": \"this is a really cool baseball bat\"\n}"
+                                "product-description": "{\n  \"product-description\": \"@{item().shortDesc}\"\n}"
                             }
                         }
                     }

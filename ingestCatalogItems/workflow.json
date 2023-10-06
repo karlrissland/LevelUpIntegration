@@ -36,7 +36,7 @@
                     "test": "test"
                 }
             },
-            "Transform_-_vendor_batch_to_internal_batch": {
+            "Transform_using_Data_Mapper_XSLT": {
                 "type": "Xslt",
                 "kind": "DataMapper",
                 "inputs": {
@@ -58,7 +58,7 @@
                     "parameters": {
                         "containerName": "outbound",
                         "blobName": "Batch@{variables('BatchId')}.xml",
-                        "content": "@outputs('Compose_-_internal_batch_json')",
+                        "content": "@body('Transform_using_Data_Mapper_XSLT')",
                         "overrideIfExists": "true"
                     },
                     "serviceProviderConfiguration": {
@@ -68,7 +68,7 @@
                     }
                 },
                 "runAfter": {
-                    "Compose_-_internal_batch_json": [
+                    "Transform_using_Data_Mapper_XSLT": [
                         "SUCCEEDED"
                     ]
                 }
@@ -108,66 +108,6 @@
                         "SUCCEEDED"
                     ]
                 }
-            },
-            "Transform_-_xml_batch_to_JSON_batch_msg": {
-                "type": "Xslt",
-                "kind": "DataMapper",
-                "inputs": {
-                    "content": "@body('Transform_-_vendor_batch_to_internal_batch')",
-                    "map": {
-                        "source": "LogicApp",
-                        "name": "internalXMLBatch-to-internalJSONBatch.xslt"
-                    }
-                },
-                "runAfter": {
-                    "Transform_-_vendor_batch_to_internal_batch": [
-                        "SUCCEEDED"
-                    ]
-                }
-            },
-            "For_each_-_batch_record": {
-                "type": "Foreach",
-                "foreach": "@body('Transform_-_xml_batch_to_JSON_batch_msg')?['catalogItems']",
-                "actions": {
-                    "Compose_-_Update_Batch_Item": {
-                        "type": "Compose",
-                        "inputs": "@setProperty(item(),'longDesc',body('Invoke_a_workflow_in_this_workflow_app').generatedProductDescription)",
-                        "runAfter": {
-                            "Invoke_a_workflow_in_this_workflow_app": [
-                                "SUCCEEDED"
-                            ]
-                        }
-                    },
-                    "Invoke_a_workflow_in_this_workflow_app": {
-                        "type": "Workflow",
-                        "inputs": {
-                            "host": {
-                                "workflow": {
-                                    "id": "productDescriptionGenerator"
-                                }
-                            },
-                            "body": {
-                                "product-description": "{\n  \"product-description\": \"@{item().shortDesc}\"\n}"
-                            }
-                        }
-                    }
-                },
-                "runAfter": {
-                    "Transform_-_xml_batch_to_JSON_batch_msg": [
-                        "SUCCEEDED"
-                    ]
-                }
-            },
-            "Compose_-_internal_batch_json": {
-                "type": "Compose",
-                "inputs": {
-                    "catalogItems": "@outputs('Compose_-_Update_Batch_Item')"
-                },
-                "runAfter": {
-                    "For_each_-_batch_record": [
-                        "SUCCEEDED"
-                    ]
-                }
             }
         },
         "contentVersion": "1.0.0.0",
@@ -187,38 +127,7 @@
                 }
             }
         },
-        "parameters": {
-            "AzureAiBaseEndpoint": {
-                "type": "String",
-                "value": "@appsetting('openaiEndpoint')",
-                "defaultValue": "@appsetting('openaiEndpoint')"
-            },
-            "DavinciEndpoint": {
-                "type": "String",
-                "value": "@appsetting('davinciDeployment')",
-                "defaultValue": "@appsetting('davinciDeployment')"
-            },
-            "AOAIAPIKey": {
-                "type": "String",
-                "value": "@appsetting('openaiKey')",
-                "defaultValue": "@appsetting('openaiKey')"
-            },
-            "AzureDALLEEndpoint": {
-                "type": "String",
-                "value": "images/generations:submit",
-                "defaultValue": "images/generations:submit"
-            },
-            "AzureDALLERetrievalEndpoint": {
-                "type": "String",
-                "value": "operations/images/",
-                "defaultValue": "operations/images/"
-            },
-            "AzureAPIVersion": {
-                "type": "String",
-                "value": "@appsetting('azureOpenAIAPIVersion')",
-                "defaultValue": "@appsetting('azureOpenAIAPIVersion')"
-            }
-        }
+        "parameters": {}
     },
     "kind": "Stateful"
 }

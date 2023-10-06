@@ -457,3 +457,73 @@ Once done, navigate to the deployment folder and run the appdeployment.ps1 scrip
 }
 ```
 
+### Part B: Modify the ingestion workflow to call the OpenAI workflow
+In this section we will be changing the origional ingestion workflow to call out to the OpenAI workflow we just created.  We will be using the workflow we created in part 1 as a starting point.  We will be adding a new action to the workflow to call the OpenAI workflow.  We will then update the batch to include the generated descriptions for each batch item.
+
+#### Step 1 - Add the OpenAI workflow call
+Open the designer for the `ingestCatalogItems` workflow.  We are going to make changes where the arrow is in the picture below.
+
+![Alt text](images/ingestionpart2-1-whereworking.png)
+
+At a high level, here is what we are going to do.
+- transform the internal batch from XML to JSON
+- Setup a for each loop to iterate over the batch items
+- for each batch item, we are going to invoke the generateDescriptions workflow we just created
+- Update the batch item
+- compose the final outbound batch
+- Save the batch to blob storage
+
+We took care of some of the grunt work for you and provided the necessary schemas and maps so you only have to wire up the workflow.
+
+Under the Transform using data mapper xslt action, add another.  Transform action.
+
+![Alt text](images/ingestionpart2-1-addtransform.png)
+
+Once added, the properties dialog will open.  For content, select the output of the Transform action above the one you just added.  Leave the map source as LogicApp.  Pick internalXMLBatch-to-internalJSONBatch as your map.
+
+Next, add a For Each action under the Transform action you just added.  Use the following expression as the output from previous step;
+
+```
+"@body('Transform_-_xml_batch_to_JSON_batch_msg')?['catalogItems']"
+```
+
+Note: the name of the action may be different than the one above.
+
+Next, add a 'Invoke a workflow in this workflow app' action.  Select the product DescriptionGenerator as the workflow to call.  And using the blue FX button with your cursor in the body text box, search for and pick item() from the list of functions.  Add '.shortDesc' so the function looks like `item().shortDesc`.
+
+The item() function is a reference to the current item in the for each loop.  This will pass the short description to the OpenAI workflow.
+
+Now that we are generating descriptions from the batch, we need to update our outbound batch with the new long descriptions.  Under the Invoke workflow Action, add a compose action.  Put your cursor in the text box and click the blue fx button.  Enter the following expression;
+```
+setProperty(item(),'longDesc',body('Invoke_a_workflow_in_this_workflow_app').generatedProductDescription)
+```
+Make sure you click the add button to add the expression to the text box.
+
+We are now updating each batch record with the new long description.  Next we need to assemble the records into our final, outbound batch.
+
+Under the for each loop, add another compose action.  Configure the inputs as follows;
+
+![Alt text](images/ingestionpart2-1-finalcompose.png)
+
+Lastly, click on the upload blob action and change the content value to be the output of the last compose action.  Your parameters should look similar to the following;
+
+![Alt text](images/ingestionpart2-1-uploadblobchanges.png)
+
+You should be good to run the solution.  Spin it up and drop the vendor xml file in your local input container the same as you did with part one.  When the workflow completes, take a look at the local output container to see your new batch with much better descriptions than it had previously.
+
+Leaving the workflow running, open the overview and explore how the workflow executed.  Note how you can step through the loop to see the values sent to and from the generate description workflow.
+
+Go ahead and deploy the updated workflow to Azure using the same script you used in part -1.  While we did some work to automatically add most of the app config necessary to run the app, you will need to add a configuration item for the model name.
+
+## Summary
+In this workshop, you learned how to create a logic app workflow, deploy it to Azure, and leverage the workflow designer to create a workflow that calls another workflow.  Work with parameters, local settings, run everything locally as well as in Azure, as well as how to leverage the Azure CLI to provision resources and configure your logic app.
+
+Few things that we didn't specifically point that can be an advantage over simply coding it up;
+- LogicApps are stateful.  You can see the state of the workflow, the inputs and outputs of each step, and the telemetry for each run.
+- There is a many built in connectors that make it easy to integrate with other services as well as a rich set of actions that make it easy to work with data.
+- The designer makes it easy to visualize the workflow and the data flowing through it.
+- There is a visual mapper that helps you transform data from one format to another.
+- We are actually tracking batch ID with Application insights making it easy to track a batch through the system.
+- We are using the built in retry policy to retry failed steps.
+- The for each loop is actually a for each parallel loop.  This means that each iteration of the loop is executed in parallel.  This is a great way to scale out your workflow.
+- And more....

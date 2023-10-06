@@ -388,8 +388,72 @@ Remember those parameters?  When you saved your workflow, since we have paramete
 
 The @appsettings function will lookup the value in your app configuration when deployed to Azure, when running locally, it will pull the information from your local.settings.json file.  So we have a few entries to create, which will require us to provision a model in OpenAI.
 
-### Step 4 - Provision an OpenAI model
+### Step 4 - Provision an OpenAI model, update local settings, and test
+Use the following Azure CLI command to provision a Davinci model in your OpenAI service.
 
-### Step 5 - Updated Local Settings and Test
+```
+az cognitiveservices account deployment create -g levelupIntegration-dev -n <yourservicename> --deployment-name davincimodel --model-name gpt-35-turbo-instruct --model-version "0914" --model-format OpenAI --sku-capacity 120 --sku-name "Standard"
+```
 
+Next, we need to get the endpoint and key for the service and a few additional parameter values for our local.settings.json file.  Turns out, we did some extra work when provisioning the infrastructure.  We provisioned an OpenAPI service for you, grabbed a few pieces of data, and stuffed them into keyvault.  Run the following three commands, with the name of your keyvault, to get the information you need;
+
+```
+az keyvault secret show --name openaiEndpoint --vault-name <yourkeyvault> --query "value"
+az keyvault secret show --name openaiKey --vault-name <yourkeyvault> --query "value"
+az keyvault secret show --name openaiName --vault-name <yourkeyvault> --query "value"
+```
+
+Next, we need to update your local settings json file with the values we just retrieved.  Open the local.settings.json file and update the following values;
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "APP_KIND": "workflowapp",
+    "ProjectDirectoryPath": "c:\\Source\\LevelUpIntegration",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "WORKFLOWS_SUBSCRIPTION_ID": "",
+    "AzureBlob_connectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;",
+    "openaiEndpoint" : "<your value>",
+    "openaiKey" : "<your value>",
+    "openaiName":"<your value>",
+    "davinciDeployment": "openai/deployments/davincimodel/completions",
+    "azureOpenAIAPIVersion": "2023-06-01-preview"  
+  }
+}
+```
+
+You should be good to test your workflow.  Run / Debug the solution locally, then open the productDescriptionGenerator workflow overview to get the URI.  Use your favorite REST client to call the workflow.  The body of your post should be JSON and look like;
+
+```json
+{
+  "product-description": "A baseball bat"
+}
+```
+
+If successful, you should get a response that looks simlar to this;
+
+```json
+{
+    "generatedProductDescription": "\n\n\"Experience the perfect swing with our high-quality, lightweight baseball bat. Crafted from durable materials for optimal performance, this bat will help take your game to the next level.\""
+}
+```
+
+
+### Step 5 - Deploy to Azure and test
+Before we can deploy and run the logicapp, we need to add some additional configuration to the service.  We need to add a few few missing app settings and we will use the Azure CLI to do this.  Run the following commands, with the name of your keyvault, to get the information you need;
+
+```
+az logicapp config appsettings set --name <YourLogicAppName> --resource-group levelupIntegration-dev --subscription <YourSubscriptionID> --settings "davinciDeployment=openai/deployments/davincimodel/completions"
+az logicapp config appsettings set --name <YourLogicAppName> --resource-group levelupIntegration-dev --subscription <YourSubscriptionID> --settings "azureOpenAIAPIVersion=2023-06-01-preview"
+```
+
+Once done, navigate to the deployment folder and run the appdeployment.ps1 script the same way you ran it in part-1.  Once deployed, navigate to the logic app in the azure portal and grab the URI for the workflow so you can test it.  Use your favorite REST client to call the workflow.  The body of your post should be JSON and look like;
+
+```json
+{
+  "product-description": "A baseball bat"
+}
+```
 

@@ -86,11 +86,310 @@ You should see the file in the inbound container for a few seconds before it is 
 Go back to the logic app, workflows, and click on the ingestCatalogItems workflow.  Similar to the local development experience, you should see the run history and details of the run.  You can also see the telemetry in application insights.
 
 ## Part 2 - incorporate generative AI
-The ecommerce department is interested in leveraging generative AI to create product descriptions.  The descriptions they receive from their vendors are not very good and at times only a short description.  They would like to leverage the product name, short description, and any specifications provided to create a more robust description.  You are being asked to enhance the existing catalog ingestion process to support the scenario.
+The ecommerce department is interested in leveraging generative AI to create product descriptions.  The descriptions they receive from their vendors are not very good and at times only a short description.  They would like to leverage the product name, short description, and any specifications provided to create a more robust description.  You are being asked to enhance the existing catalog ingestion process to support the scenario.  You will need to create a new workflow that will call the OpenAI API to generate the description.  The workflow will need to call the OpenAI API, parse the response, and update the catalog item with the generated description.  The workflow will need to be called from the existing catalog ingestion workflow.
 
+There will be two main parts to this scenario.  First, you will need to create the workflow that will call the OpenAI API.  Second, you will need to update the existing catalog ingestion workflow to call the new workflow.
 
-### Step 1 - Create the OpenAI Workflow
+### Part A: Create the OpenAI Workflow
+In this section, we are going to build the following workflow, then test it with your favorite REST client.
 
+![Alt text](images/generateDescriptions-1-completed.png)
 
-### Step 2 - Update the catalog ingestion workflow to call the OpenAI workflow
+To help you get started, we did some pre work for you.  Fetch and checkout the branch named Part-2 Start.  We prebuilt some of the schemas and maps for you but you will still need to create the workflow and configure the actions.
+
+#### Step 1 - Create an empty workflow
+Using Ctrl+Shift+P, open the command window and select to create a new workflow.  Select stateful as the type of workflow and name the workflow `generateDescriptions`.  This will create a new folder named `generateDescriptions` with a workflow.json file in it.  The workflow.json file will also open showing you the JSON representation of the workflow.  You can close this file for now.
+
+In the explorer, find the productDescriptionGenerator folder, right click on the workflow.json file and select designer to open the graphical designer.  When asked if you want to use Azure connectors, select skip.
+
+Note: It will take a few moments to open the first time as it starts up some background services.
+
+![Alt text](images/generateDescriptions-1-OpenDesigner.png)
+
+In a few moments, you should see a blank canvas with a simple 'Add a trigger' button.
+
+### Step 2 - Wireup the initial Request Response flow
+The workflow is fairlly simple, we need to setup a request trigger to receive a message via http, use that information to ocall OpenAI, parse the response from the openAI service, and return it as the response to our initial caller.
+
+Click the 'Add a trigger' button in the middle of the canvas, search for and select When a HTTP request is received.
+
+![Alt text](images/generateDescriptions-2-AddATrigger.png)
+
+This will add the trigger to the canvas and open the trigger configuration.  We need to configure the trigger to accept a POST request and to accept a JSON payload.  copy the following json schema into the Request Body JSON Schema text box.
+
+```json
+{
+    "type": "object",
+    "properties": {
+        "product-description": {
+            "type": "string"
+        }
+    }
+}
+```
+
+The Request parameters should look like the following;
+
+![Alt text](images/generateDescriptions-2-RequestJsonSchema.png)
+
+Next, we want to make sure that we validate the schema and throw an error if the inbound message is invalid.  Click on the settings tab and check the schema validation option.
+
+![Alt text](images/generateDescriptions-2-SchemaValidation.png)
+
+Next, let's add the response.  CLick on the plus under the Request trigger, search for response, and add it.  When done, your workflow should look similar to the following;
+
+![Alt text](images/generateDescriptions-2-RequestResponse.png)
+
+### Step 3 - Wireup the OpenAI call
+Next, let's call our openai service.  Click the plus under the response action, search for http, and add the http action.  This will add the action to the canvas and open the configuration window.
+
+![Alt text](images/generateDescriptions-3-InitalHTTP.png)
+
+For HTTP actions, you don't configure a connection, you simply pass it a URL and configure the payload, headers, and/or query strings.  However, we want to make sure that the URL is parameterized so we can change it as we deploy across environments.  We also want to ensure that we don't store and API keys in our code.
+
+To accomplish this, we are going to leverage parameters and our local.settings.json file.  At the top of the workflow, you see an option for parameters, click it to open the Parameters window.
+
+![Alt text](images/generateDescriptions-3-parametersStart.png)
+
+You need to create the 4 parameters listed in the table below;
+
+| Name | Value | Description |
+|------|-------|-------------|
+|AOAIAPIKey |@appsetting('openaiKey') | The API key for the OpenAI service |
+DavinciEndpoint |@appsetting('openaiEndpoint') | The endpoint for the OpenAI service |
+| AzureAIBaseEndpoint | @appsetting('openaiEndpoint') | The base endpoint for the OpenAI service |
+| AzureAPIVersion | @appsetting('azureOpenAIAPIVersion') | The version of the OpenAI API |
+
+When done, your parameters window should look like the following;
+
+![Alt text](images/generateDescriptions-3-parametersFinished.png)
+
+Click on the workflow canvas and then click on the HTTP Action.  Put your cursor in the URI text box.  You will see a blue icon pop, click on the blue lightining bolt.
+
+![Alt text](images/generateDescriptions-3-bluelightning.png)
+
+This will open a picker that lists all the values available from previous actions and parameters.  Select the AzureAIBaseENdpoint parameters, then click the blue lightning bolt again and pick the DavinciEndpoint parameter.  This will construct the URI from the parameters.  Next, select POST as the method.  For headers, type in `api-key` as your key and select the AOAIAPIKey parameter as the key value.  For queries, enter `api-version` as your key, then use the AzureAPIVersion parameter for the value.
+
+Finally, for the body, we are going write some JSON and incorporate the part of the body we are receiving with the request.  Below is the JSON payload you need to add to the body with a placeholder for the request payload;
+
+```
+{
+ "prompt": "You are generating descriptions for products to be sold online. Create a consice product description for: <product-description placeholder>",
+ "max_tokens": 300,
+ "n": 1
+}
+
+```
+
+Since we are using a JSON Schema with the request, the values from the inbound JSON are available to us in the picker.  Highlight the placeholder text and click the blue lightning bolt.  Select the product-description property from the request body.  When done, your HTTP action should look like the following;
+
+![Alt text](images/generateDescriptions-3-HTTPProperties.png)
+
+Almost done!  We need to add just two more actions between the HTTP and Response action.
+
+First add a Parse JSON action.  This will parse the response from the OpenAI service.  Click the plus under the HTTP action, search for parse, and add the Parse JSON action.  This will add the action to the canvas and open the configuration window.  For the content, select the Body property from the HTTP action.  For the schema, copy the following JSON into the schema text box;
+
+```json
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "object": {
+            "type": "string"
+        },
+        "created": {
+            "type": "integer"
+        },
+        "model": {
+            "type": "string"
+        },
+        "prompt_annotations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "prompt_index": {
+                        "type": "integer"
+                    },
+                    "content_filter_results": {
+                        "type": "object",
+                        "properties": {
+                            "hate": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "self_harm": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "sexual": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "violence": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "prompt_index",
+                    "content_filter_results"
+                ]
+            }
+        },
+        "choices": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string"
+                    },
+                    "index": {
+                        "type": "integer"
+                    },
+                    "finish_reason": {
+                        "type": "string"
+                    },
+                    "logprobs": {},
+                    "content_filter_results": {
+                        "type": "object",
+                        "properties": {
+                            "hate": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "self_harm": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "sexual": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "violence": {
+                                "type": "object",
+                                "properties": {
+                                    "filtered": {
+                                        "type": "boolean"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "text",
+                    "index",
+                    "finish_reason",
+                    "logprobs",
+                    "content_filter_results"
+                ]
+            }
+        },
+        "usage": {
+            "type": "object",
+            "properties": {
+                "completion_tokens": {
+                    "type": "integer"
+                },
+                "prompt_tokens": {
+                    "type": "integer"
+                },
+                "total_tokens": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
+```
+This will make it easy for us to work with the response from the OpenAI service.
+
+When done, your Parse JSON action should look like the following;
+
+![Alt text](images/generateDescriptions-3-parseJson.png)
+
+Next, we are going to initialize a variable and grab our generated description.  Turns out that what we want is in a JSON array, so we need a formula to grab exactly what we want.  Click the plus under the Parse JSON action, search for initialize, and add the Initialize variable action.  This will add the action to the canvas and open the configuration window.  For the name, enter `ProductDescription`.  For the value, put your cursor in the text box and click the blue fx button that pops up.  This will open the expression editor.  In the expression editor, enter the following expression and click the Add button to add the expression to the value text box.
+
+```;
+body('Parse_JSON')?['choices'][0]['text']
+```
+
+NOTE: since we are not picking from the pick list, the name of the action may be something other than 'Parse_JSON'.
+
+![Alt text](images/generateDescriptions-3-initVariable.png)
+
+Lastly, let's send the response back to the caller.  Click on the response action and enter the following in the body text box;
+
+![Alt text](images/generateDescriptions-3-response.png)
+
+Finally, save your work.
+
+Remember those parameters?  When you saved your workflow, since we have parameters, a new parameters.json file was created.  If you open it, you will see the following;
+
+![Alt text](images/generateDescriptions-3-parametersjson.png)
+
+The @appsettings function will lookup the value in your app configuration when deployed to Azure, when running locally, it will pull the information from your local.settings.json file.  So we have a few entries to create, which will require us to provision a model in OpenAI.
+
+### Step 4 - Provision an OpenAI model
+
+### Step 5 - Updated Local Settings and Test
+
 
